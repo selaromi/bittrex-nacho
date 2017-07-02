@@ -12,6 +12,8 @@ var ASK_MULTIPLIER = config.ASK_MULTIPLIER;
 var BID_MULTIPLIER = config.BID_MULTIPLIER;
 
 prompt.start();
+console.log('using: '+process.argv[2]);
+console.log('AMOUNT_TO_TRADE: '+AMOUNT_TO_TRADE+' ASK_MULTIPLIER: '+ASK_MULTIPLIER);
 console.log('Actions:');
 console.log('1 - Check Balance');
 console.log('2 - Buy');
@@ -36,11 +38,11 @@ prompt.get(['action'], function (err, result) {
         var market = 'BTC-'.concat(coin);
         public_api.getTicker(market).then(({ Ask }) => {
           console.log('Buying '+AMOUNT_TO_TRADE/(Ask*ASK_MULTIPLIER)+' @ rate: '+Ask*ASK_MULTIPLIER);
-          // private_api.buyLimit(market,AMOUNT_TO_TRADE/(Ask*ASK_MULTIPLIER),Ask*ASK_MULTIPLIER)
-          // .then(console.log)
-          // .catch(function(e){
-          //     console.log(e.message)
-          // })
+          private_api.buyLimit(market,AMOUNT_TO_TRADE/(Ask*ASK_MULTIPLIER),Ask*ASK_MULTIPLIER)
+          .then(console.log)
+          .catch(function(e){
+              console.log(e.message)
+          })
         });
       });
       break;
@@ -53,11 +55,11 @@ prompt.get(['action'], function (err, result) {
           var market = 'BTC-'.concat(coin);
           public_api.getTicker(market).then(({ Last }) => {
             console.log('Selling '+balance.Available+' @ rate: '+Last);
-            // private_api.sellLimit(market,balance.Available,Last)
-            // .then(console.log)
-            // .catch(function(e){
-            //     console.log(e.message)
-            // })
+            private_api.sellLimit(market,balance.Available,Last)
+            .then(console.log)
+            .catch(function(e){
+                console.log(e.message)
+            })
           });
         });
       });
