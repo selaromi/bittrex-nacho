@@ -11,7 +11,7 @@
   "dependencies": {
     "bluebird": "^3.5.0",
     "inquirer": "^3.1.1",
-    "node.bittrex.api": "^0.3.0",
+    "node.bittrex.api": "^0.3.2",
     "promise": "^8.0.0",
     "prompt": "^1.0.0",
     "q": "^1.5.0"
