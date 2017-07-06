@@ -20,6 +20,23 @@ socket_bittrex.options({
   'cleartext' : false
 });
 
+function buyWhenSold(coin,market) {
+  private_api.getBalance(coin).then(( { Available } ) => {
+		if(!!Available) {
+		  private_api.sellMarket(market,balance.Available)
+		  .then(console.log)
+		  .catch(function(e){
+			  console.log(e.message)
+		  })
+		} else {
+		  console.log(coin+' not sold yet');
+		  setTimeout(() => buyWhenSold(coin),2000);
+		}
+	}
+  );
+}
+
+
 prompt.start();
 console.log('using: '+process.argv[2]);
 console.log('AMOUNT_TO_TRADE: '+AMOUNT_TO_TRADE+' ASK_MULTIPLIER: '+ASK_MULTIPLIER);
@@ -32,6 +49,7 @@ console.log('4 - Sell');
 console.log('5 - Market Sell');
 console.log('6 - Buy coins about from Pump It');
 console.log('7 - Socket');
+console.log('8 - Buy and Sell');
 prompt.get(['action'], function (err, result) {
   switch (Number(result.action)) {
     /*
@@ -143,6 +161,22 @@ prompt.get(['action'], function (err, result) {
       });
       break;
 
+	case 8:
+      console.log('Abr of the coin: (ex: LTC)');
+      prompt.get(['coin'], function (err, result) {
+        var coin = result.coin;
+        var market = 'BTC-'.concat(coin);
+        public_api.getTicker(market).then(({ Ask }) => {
+          console.log('Buying '+AMOUNT_TO_TRADE/(Ask*ASK_MULTIPLIER)+' @ rate: '+Ask*ASK_MULTIPLIER);
+          private_api.buyLimit(market,AMOUNT_TO_TRADE/(Ask*ASK_MULTIPLIER),Ask*ASK_MULTIPLIER)
+          .then(() => buyWhenSold(coin,market))
+          .catch(function(e){
+              console.log(e.message)
+          })
+        });
+      });
+      break;
+	  
     default:
       console.log('No action Selected')
       break;
