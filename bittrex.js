@@ -22,18 +22,20 @@ socket_bittrex.options({
 
 function buyWhenSold(coin,market) {
   private_api.getBalance(coin).then(( { Available } ) => {
-		if(!!Available) {
-		  private_api.sellMarket(market,balance.Available)
-		  .then(console.log)
-		  .catch(function(e){
-			  console.log(e.message)
-		  })
-		} else {
-		  console.log(coin+' not sold yet');
-		  setTimeout(() => buyWhenSold(coin),2000);
-		}
+    if(!!Available) {
+	  public_api.getTicker(market).then(({ Ask }) => {
+	  console.log('Selling '+balance.Available+' @ rate: '+Ask);
+	  private_api.sellLimit(market,balance.Available,Ask)
+		.then(console.log)
+		.catch(function(e){
+		  console.log(e.message)
+		})
+	  });
+	} else {
+	  console.log(coin+' not sold yet');
+	  setTimeout(() => buyWhenSold(coin,market),2000);
 	}
-  );
+  });
 }
 
 
