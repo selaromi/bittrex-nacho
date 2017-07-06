@@ -24,8 +24,8 @@ function buyWhenSold(coin,market) {
   private_api.getBalance(coin).then(( { Available } ) => {
     if(!!Available) {
 	  public_api.getTicker(market).then(({ Ask }) => {
-	  console.log('Selling '+balance.Available+' @ rate: '+Ask);
-	  private_api.sellLimit(market,balance.Available,Ask)
+	  console.log('Selling '+Available+' @ rate: '+Ask);
+	  private_api.sellLimit(market,Available,Ask)
 		.then(console.log)
 		.catch(function(e){
 		  console.log(e.message)
