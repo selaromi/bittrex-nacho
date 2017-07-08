@@ -23,18 +23,20 @@ socket_bittrex.options({
 function buyWhenSold(coin,market) {
   private_api.getBalance(coin).then(( { Available } ) => {
     if(!!Available) {
-	  public_api.getTicker(market).then(({ Ask }) => {
-	  console.log('Selling '+Available+' @ rate: '+Ask);
-	  private_api.sellLimit(market,Available,Ask)
-		.then(console.log)
-		.catch(function(e){
-		  console.log(e.message)
-		})
-	  });
-	} else {
-	  console.log(coin+' not sold yet');
-	  setTimeout(() => buyWhenSold(coin,market),2000);
-	}
+      prompt.get(['Press enter to sell'], function (err, result) {
+	      public_api.getTicker(market).then(({ Ask }) => {
+	        console.log('Selling '+Available+' @ rate: '+Ask);
+	        private_api.sellLimit(market,Available,Ask)
+		      .then(console.log)
+		      .catch(function(e){
+		        console.log(e.message)
+		      })
+	      });
+      });
+  	} else {
+  	  console.log(coin+' not sold yet');
+  	  setTimeout(() => buyWhenSold(coin,market),2000);
+  	}
   });
 }
 
@@ -154,12 +156,17 @@ prompt.get(['action'], function (err, result) {
       break;
 
     case 7:
-      socket_bittrex.websockets.subscribe(['BTC-ETH','BTC-SC','BTC-ZEN'], function(data) {
-      if (data.M === 'updateExchangeState') {
-        data.A.forEach(function(data_for) {
-          console.log('Market Update for '+ data_for.MarketName, data_for);
+      console.log('Abr of the coin: (ex: LTC)');
+      prompt.get(['coin'], function (err, result) {
+        var coin = result.coin;
+        socket_bittrex.websockets.subscribe(['BTC-'.concat(coin)], function(data) {
+        if (data.M === 'updateExchangeState') {
+          data.A.forEach(function(data_for) {
+            const fills = data_for.Fills;
+            fills[0] && console.log('Market Update for '+ data_for.MarketName, fills[0].Rate);
+          });
+        }
         });
-      }
       });
       break;
 
@@ -178,7 +185,7 @@ prompt.get(['action'], function (err, result) {
         });
       });
       break;
-	  
+
     default:
       console.log('No action Selected')
       break;
