@@ -163,7 +163,7 @@ prompt.get(['action'], function (err, result) {
         if (data.M === 'updateExchangeState') {
           data.A.forEach(function(data_for) {
             const fills = data_for.Fills;
-            fills[0] && console.log('Market Update for '+ data_for.MarketName, fills[0].Rate);
+            console.log('Market Update for '+ data_for.MarketName, fills);
           });
         }
         });
