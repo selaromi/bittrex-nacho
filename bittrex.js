@@ -1,9 +1,14 @@
 var bittrex = require('@you21979/bittrex.com');
+var bluebird = require('bluebird');
 var socket_bittrex = require('./node_modules/node.bittrex.api/node.bittrex.api.js');
 var fs = require('fs');
-var config = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 var prompt = require('prompt');
+var redis = require('redis');
+bluebird.promisifyAll(redis.RedisClient.prototype);
+bluebird.promisifyAll(redis.Multi.prototype);
 
+var config = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+var client = redis.createClient();
 var public_api = bittrex.PublicApi;
 var private_api = bittrex.createPrivateApi(config.APIKEY, config.SECRET, "Asknacho's bot")
 
@@ -20,7 +25,7 @@ socket_bittrex.options({
   'cleartext' : false
 });
 
-function buyWhenSold(coin,market) {
+function _buyWhenSold(coin,market) {
   private_api.getBalance(coin).then(( { Available } ) => {
     if(!!Available) {
       prompt.get(['Press enter to sell'], function (err, result) {
@@ -40,6 +45,21 @@ function buyWhenSold(coin,market) {
   });
 }
 
+function buyWhenSold(uuid) {
+  private_api.getOrder(uuid)
+  .then(({ Exchange, Quantity, IsOpen, PricePerUnit }) => {
+    if(IsOpen) {
+      console.log(Exchange+' not bought yet');
+      setTimeout(() => buyWhenSold(uuid), 2000)
+    } else {
+      private_api.sellLimit(Exchange,Quantity, PricePerUnit*BID_MULTIPLIER)
+      .then(console.log)
+      .catch(function(e){
+        console.log(e.message)
+      })
+    }
+  })
+}
 
 prompt.start();
 console.log('using: '+process.argv[2]);
@@ -170,22 +190,29 @@ prompt.get(['action'], function (err, result) {
       });
       break;
 
-	case 8:
-      console.log('Abr of the coin: (ex: LTC)');
-      prompt.get(['coin'], function (err, result) {
-        var coin = result.coin;
-        var market = 'BTC-'.concat(coin);
-        public_api.getTicker(market).then(({ Ask }) => {
-          console.log('Buying '+AMOUNT_TO_TRADE/(Ask*ASK_MULTIPLIER)+' @ rate: '+Ask*ASK_MULTIPLIER);
-          private_api.buyLimit(market,AMOUNT_TO_TRADE/(Ask*ASK_MULTIPLIER),Ask*ASK_MULTIPLIER)
-          .then(() => buyWhenSold(coin,market))
-          .catch(function(e){
-              console.log(e.message)
-          })
+  	case 8:
+        console.log('Abr of the coin: (ex: LTC)');
+        prompt.get(['coin'], function (err, result) {
+          var coin = result.coin.toUpperCase();
+          var market = 'BTC-'.concat(coin);
+          client.getAsync(market).then(function(current_price) {
+            if (!!current_price) {
+              current_price = Number(current_price);
+              console.log('Buying '+AMOUNT_TO_TRADE/(current_price*ASK_MULTIPLIER)+' @ rate: '+current_price*ASK_MULTIPLIER);
+              private_api.buyLimit(market,AMOUNT_TO_TRADE/(current_price*ASK_MULTIPLIER),current_price*ASK_MULTIPLIER)
+              .then(({ uuid }) => buyWhenSold(uuid))
+              .catch((e) => console.log(e.message))
+            } else {
+              public_api.getTicker(market).then(({ Ask }) => {
+                console.log('Buying '+AMOUNT_TO_TRADE/(Ask*ASK_MULTIPLIER)+' @ rate: '+Ask*ASK_MULTIPLIER);
+                private_api.buyLimit(market,AMOUNT_TO_TRADE/(Ask*ASK_MULTIPLIER),Ask*ASK_MULTIPLIER)
+                .then(({ uuid }) => buyWhenSold(uuid))
+                .catch((e) => console.log(e.message))
+              });
+            }
+          });
         });
-      });
-      break;
-
+        break;
     default:
       console.log('No action Selected')
       break;
