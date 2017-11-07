@@ -10,7 +10,7 @@ bluebird.promisifyAll(redis.Multi.prototype);
 var config = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 var client = redis.createClient();
 var public_api = bittrex.PublicApi;
-var private_api = bittrex.createPrivateApi(config.APIKEY, config.SECRET, "Asknacho's bot")
+var private_api = bittrex.createPrivateApi(config["bittrex"].APIKEY, config["bittrex"].SECRET, "Asknacho's bot")
 
 var AMOUNT_TO_TRADE = config.AMOUNT_TO_TRADE;
 var AMOUNT_TO_TRADE_PER_COIN = config.AMOUNT_TO_TRADE_PER_COIN;

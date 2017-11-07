@@ -11,12 +11,14 @@
   "dependencies": {
     "@you21979/bittrex.com": "0.0.4",
     "bluebird": "^3.5.0",
+    "ccxt": "^0.1.191",
+    "command-line-args": "^4.0.6",
     "inquirer": "^3.1.1",
     "node.bittrex.api": "^0.3.3",
     "promise": "^8.0.0",
     "prompt": "^1.0.0",
     "q": "^1.5.0",
     "redis": "^2.7.1",
-    "yobit": "0.0.1"
+    "tg-cli-node": "0.0.8"
   }
 }
